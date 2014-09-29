@@ -46,15 +46,25 @@ namespace TV_rename
                 .Replace("\r\n", "\n").Replace('\r', '\n').Split('\n')
                 .Select((q, i) => new { Episode = i + 1, Name = q.Trim() })
                 .ToDictionary(q => q.Episode, q => prefix + q.Episode.ToString().PadLeft(2, '0') + " " + q.Name);
-            var oldnames = Directory.EnumerateFiles(folder).Select(q => new { Path = q, Episode = GuessEpisode(Path.GetFileNameWithoutExtension(q), season) }).Where(q => q.Episode > 0);
 
-            int count = 0;
-            foreach (var f in oldnames.Where(q => correct.ContainsKey(q.Episode)))
+            var oldnames = Directory.EnumerateFiles(folder)
+                .Select(q => new { Path = q, Episode = GuessEpisode(Path.GetFileNameWithoutExtension(q), season) }).Where(q => q.Episode > 0);
+            
+            var renames = oldnames.Where(q => correct.ContainsKey(q.Episode))
+                .Select(q => new {
+                    Source = q.Path,
+                    Destination = Path.ChangeExtension(Path.Combine(folder, correct[q.Episode].Replace("\\", "").Replace(":", "-").Replace("?", "").Replace("/", "-") + ".xxx"), Path.GetExtension(q.Path))
+                });
+
+            if (renames.Count() > 0)
             {
-                File.Move(f.Path, Path.ChangeExtension(Path.Combine(folder, correct[f.Episode].Replace("\\", "").Replace(":", "-").Replace("?", "").Replace("/", "-") + ".xxx"), Path.GetExtension(f.Path)));
-                count++;
+                if (MessageBox.Show(string.Join("\n", renames.Select(q => Path.GetFileNameWithoutExtension(q.Source) + " ==> " + Path.GetFileNameWithoutExtension(q.Destination))), renames.Count() + " files to rename", MessageBoxButtons.OKCancel) == System.Windows.Forms.DialogResult.OK)
+                    foreach (var f in renames) File.Move(f.Source, f.Destination);
             }
-            MessageBox.Show(count + " files renamed successfully.");
+            else
+            {
+                MessageBox.Show("No files to rename!");
+            }
         }
         
         int GuessEpisode(string s, int season)
