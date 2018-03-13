@@ -100,5 +100,43 @@ namespace TV_rename
             s = s.Substring(0, s.IndexOf("\""));
             return s.Trim();
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var n = EpisodeNamesTextBox.Text
+                    .Replace("\r\n", "\n").Replace('\r', '\n').Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(q => q.Trim())
+                    .Where(q => q.StartsWith("\"") && q.EndsWith("\""))
+                    .Select(q => q.Substring(1, q.Length - 2));
+
+                EpisodeNamesTextBox.Text = string.Join("\r\n", n);
+                MessageBox.Show(n.Count() + " episode names found.");
+            }
+            catch
+            {
+                MessageBox.Show("Cannot deduce episode names!");
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var n = EpisodeNamesTextBox.Text
+                    .Replace("\r\n", "\n").Replace('\r', '\n').Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                    .Where(q => q.Count(c => c == '\"') > 1)
+                    .Select(q => q.Substring(q.IndexOf('\"') + 1))
+                    .Select(q => q.Substring(0, q.IndexOf('\"')).Trim());
+
+                EpisodeNamesTextBox.Text = string.Join("\r\n", n);
+                MessageBox.Show(n.Count() + " episode names found.");
+            }
+            catch
+            {
+                MessageBox.Show("Cannot deduce episode names!");
+            }
+        }
     }
 }
